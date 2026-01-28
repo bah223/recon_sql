@@ -3,13 +3,14 @@
 
 WITH params AS (
     SELECT 
-        '2026-01-10 21:00:00'::timestamp as date1_start,
-        '2026-01-11 21:00:00'::timestamp as date1_end,
-        '2026-01-17 21:00:00'::timestamp as date2_start,
-        '2026-01-18 21:00:00'::timestamp as date2_end
+        '2026-01-20 21:00:00'::timestamp as date1_start,
+        '2026-01-21 21:00:00'::timestamp as date1_end,
+        '2026-01-27 21:00:00'::timestamp as date2_start,
+        '2026-01-28 21:00:00'::timestamp as date2_end
 ),
 merchants_list AS (
-    SELECT * FROM (VALUES
+    SELECT * FROM (values
+    	('ZT/PLAYMAG-FZCO Cards KZT'),
         ('ZT/Pelican Pay Cards KZT'),
         ('ZT/DukPay Limited Moonton T-Pay (desktop-QR) RUB'),
         ('ZT/DukPay Limited Moonton T-Pay RUB'),
@@ -38,9 +39,6 @@ merchants_list AS (
         ('ZT/SWOOSHTRANSFER Ltd T-Pay Puzala RUB'),
         ('ZT/SWOOSHTRANSFER Ltd T-Pay (desktop-QR) Puzala RUB'),
         ('ZT/SWOOSHTRANSFER Ltd SberPay (push flow) Puzala RUB'),
-        ('ZT/PANACEA BIOHACKING T-Pay RUB'),
-        ('ZT/PANACEA BIOHACKING T-Pay (desktop-QR) RUB'),
-        ('ZT/PANACEA BIOHACKING Cards RUB'),
         ('ZT/Fincom TEH LTD RUB'),
         ('ZT/Fincom TEH LTD SberPay RUB'),
         ('ZT/Fincom TEH LTD T-Pay (desktop-QR) RUB'),
@@ -56,62 +54,74 @@ merchants_list AS (
         ('GFI/MONEYMAPLE TECH LTD Mandiri IDR'),
         ('GFI/MONEYMAPLE TECH LTD Permata IDR'),
         ('GFI/MONEYMAPLE TECH LTD Dana IDR'),
-        ('GFI/MONEYMAPLE TECH LTD OVO IDR')
+        ('GFI/MONEYMAPLE TECH LTD OVO IDR'),
+        ('NP-ZT/CRYSTAL FUTURE OU SberPay RUB'),
+        ('NP-DPS/CRYSTAL FUTURE OU QRPh PHP'),
+        ('NP-DPS/CRYSTAL FUTURE OU Maya PHP'),
+        ('NP-DPS/CRYSTAL FUTURE OU GCash PHP'),
+        ('NP-D2/CRYSTAL FUTURE OU QRIS IDR'),
+        ('NP-D2/CRYSTAL FUTURE OU ShopeePay IDR'),
+        ('ZT/AIMO COMPANY LIMITED Cards (BuffBuff) RUB'),
+        ('ZT/AIMO COMPANY LIMITED Cards (MLBB) RUB'),
+        ('ZT/AIMO COMPANY LIMITED TPay (BuffBuff) RUB'),
+        ('ZT/AIMO COMPANY LIMITED TPay (desktop-QR) (MLBB) RUB'),
+        ('ZT/AIMO COMPANY LIMITED TPay (MLBB) RUB'),
+        ('ZT/AIMO COMPANY LIMITED TPay (desktop-QR) (BuffBuff) RUB')
     ) AS t(shop_name)
 ),
--- Оптимизированный поиск shop_id только в нужных датах
-shop_ids AS (
-    SELECT DISTINCT shop_id, shop_name
-    FROM db_ifat 
+-- Сначала получаем данные за периоды (они уже фильтруют по датам)
+period1_data AS (
+    SELECT 
+        shop_name,
+        COUNT(*) as cnt,
+        MAX(shop_id) as shop_id  -- Берём любой shop_id из транзакций
+    FROM db_ifat
     WHERE shop_name IN (SELECT shop_name FROM merchants_list)
-      AND (
-          updated_at >= (SELECT date1_start FROM params) 
-          AND updated_at < (SELECT date1_end FROM params)
-          OR updated_at >= (SELECT date2_start FROM params) 
-          AND updated_at < (SELECT date2_end FROM params)
-      )
+      AND payment_type = 'create'
+      AND operation_status_name IN ('success', 'error')
+      AND created_at >= (SELECT date1_start FROM params)
+      AND created_at < (SELECT date1_end FROM params)
+    GROUP BY shop_name
+),
+period2_data AS (
+    SELECT 
+        shop_name,
+        COUNT(*) as cnt,
+        MAX(shop_id) as shop_id  -- Берём любой shop_id из транзакций
+    FROM db_ifat
+    WHERE shop_name IN (SELECT shop_name FROM merchants_list)
+      AND payment_type = 'create'
+      AND operation_status_name IN ('success', 'error')
+      AND created_at >= (SELECT date2_start FROM params)
+      AND created_at < (SELECT date2_end FROM params)
+    GROUP BY shop_name
+),
+-- Получаем ID из найденных транзакций
+found_shop_ids AS (
+    SELECT DISTINCT shop_id, shop_name 
+    FROM (
+        SELECT shop_id, shop_name FROM period1_data WHERE shop_id IS NOT NULL
+        UNION 
+        SELECT shop_id, shop_name FROM period2_data WHERE shop_id IS NOT NULL
+    ) t
 )
 SELECT
-    COALESCE(si.shop_id, 0) AS "ID",
+    COALESCE(fsi.shop_id, 0) AS "ID",
     ml.shop_name AS "Мерчант",
-    COALESCE(d1.cnt, 0) AS "date1",
-    COALESCE(d2.cnt, 0) AS "date2",
-    (COALESCE(d2.cnt, 0) - COALESCE(d1.cnt, 0)) AS "Δ (абс.)",
+    COALESCE(p1.cnt, 0) AS "date1",
+    COALESCE(p2.cnt, 0) AS "date2",
+    (COALESCE(p2.cnt, 0) - COALESCE(p1.cnt, 0)) AS "Δ (абс.)",
     CASE
-        WHEN COALESCE(d1.cnt, 0) = 0 AND COALESCE(d2.cnt, 0) = 0 THEN '⚪️ 0 → 0'
-        WHEN COALESCE(d1.cnt, 0) = 0 THEN '🟢 +∞% (новый поток)'
-        WHEN (COALESCE(d2.cnt, 0) - COALESCE(d1.cnt, 0)) > 0 
-            THEN '🟢 +' || ROUND((COALESCE(d2.cnt, 0) - COALESCE(d1.cnt, 0)) * 100.0 / NULLIF(COALESCE(d1.cnt, 0), 0), 2) || '%'
-        WHEN (COALESCE(d2.cnt, 0) - COALESCE(d1.cnt, 0)) < 0 
-            THEN '🔴 ' || ROUND((COALESCE(d2.cnt, 0) - COALESCE(d1.cnt, 0)) * 100.0 / NULLIF(COALESCE(d1.cnt, 0), 0), 2) || '%'
+        WHEN COALESCE(p1.cnt, 0) = 0 AND COALESCE(p2.cnt, 0) = 0 THEN '⚪️ 0 → 0'
+        WHEN COALESCE(p1.cnt, 0) = 0 THEN '🟢 +∞% (новый поток)'
+        WHEN (COALESCE(p2.cnt, 0) - COALESCE(p1.cnt, 0)) > 0 
+            THEN '🟢 +' || ROUND((COALESCE(p2.cnt, 0) - COALESCE(p1.cnt, 0)) * 100.0 / NULLIF(COALESCE(p1.cnt, 0), 0), 2) || '%'
+        WHEN (COALESCE(p2.cnt, 0) - COALESCE(p1.cnt, 0)) < 0 
+            THEN '🔴 ' || ROUND((COALESCE(p2.cnt, 0) - COALESCE(p1.cnt, 0)) * 100.0 / NULLIF(COALESCE(p1.cnt, 0), 0), 2) || '%'
         ELSE '⚪️ 0%'
     END AS "Изменение"
 FROM merchants_list ml
-LEFT JOIN shop_ids si ON ml.shop_name = si.shop_name
-LEFT JOIN (
-    -- Считаем операции для date1
-    SELECT 
-        shop_name,
-        COUNT(*) as cnt
-    FROM db_ifat
-    WHERE shop_name IN (SELECT shop_name FROM merchants_list)
-      AND payment_type = 'create'
-      AND operation_status_name IN ('success', 'error')
-      AND updated_at >= (SELECT date1_start FROM params)
-      AND updated_at < (SELECT date1_end FROM params)
-    GROUP BY shop_name
-) d1 ON ml.shop_name = d1.shop_name
-LEFT JOIN (
-    -- Считаем операции для date2
-    SELECT 
-        shop_name,
-        COUNT(*) as cnt
-    FROM db_ifat
-    WHERE shop_name IN (SELECT shop_name FROM merchants_list)
-      AND payment_type = 'create'
-      AND operation_status_name IN ('success', 'error')
-      AND updated_at >= (SELECT date2_start FROM params)
-      AND updated_at < (SELECT date2_end FROM params)
-    GROUP BY shop_name
-) d2 ON ml.shop_name = d2.shop_name
-ORDER BY "date2" DESC, "Мерчант";
+LEFT JOIN found_shop_ids fsi ON ml.shop_name = fsi.shop_name
+LEFT JOIN period1_data p1 ON ml.shop_name = p1.shop_name
+LEFT JOIN period2_data p2 ON ml.shop_name = p2.shop_name
+ORDER BY COALESCE(p2.cnt, 0) DESC, ml.shop_name;

@@ -4,14 +4,14 @@
 
 WITH params AS (
     SELECT 
-        '2026-01-09 00:00:00'::timestamp as period1_start, -- Дата и время начала дата1 - от
-        '2026-01-09 23:59:00'::timestamp as period1_end,   -- Дата и время начала дата1 - до
-        '2026-01-16 00:00:00'::timestamp as period2_start, -- Дата и время начала дата2 - от
-        '2026-01-16 23:59:00'::timestamp as period2_end    -- Дата и время начала дата2 - до
+        '2026-01-21 00:00:00'::timestamp as period1_start,
+        '2026-01-21 23:59:00'::timestamp as period1_end,
+        '2026-01-28 00:00:00'::timestamp as period2_start,
+        '2026-01-28 23:59:00'::timestamp as period2_end
 ),
-selected_ids AS (                                       
+selected_ids AS (
     SELECT id FROM (VALUES
-        (1510),             -- В этом блоке редактируем id мерчей по выплатам добавить\убрать
+        (1510),
         (4190),
         (4084),
         (4291)

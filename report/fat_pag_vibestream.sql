@@ -1,15 +1,16 @@
--- Запрос по платежам мерчанта Pagsmile RUB в процессинге FAT за период времени в UTC -5, сравниваем количество транзакций дата1 и дата2 - рост и падение отображаем в процентах в выдаче.
+-- Запрос по платежам мерчанта Pagsmile RUB и Vibestream KZT в процессинге FAT за период времени в UTC -5, сравниваем количество транзакций дата1 и дата2 - рост и падение отображаем в процентах в выдаче.
 -- ок
 
 WITH params AS (
     SELECT 
-        '2026-01-08 19:00:00'::timestamp as date1_start, -- Дата и время начала дата1 - от - в UTC -5 смотрим внимательно
-        '2026-01-09 19:00:00'::timestamp as date1_end,   -- Дата и время начала дата1 - до - в UTC -5 смотрим внимательно
-        '2026-01-15 19:00:00'::timestamp as date2_start, -- Дата и время начала дата1 - от - в UTC -5 смотрим внимательно
-        '2026-01-16 19:00:00'::timestamp as date2_end    -- Дата и время начала дата1 - до - в UTC -5 смотрим внимательно
+        '2026-01-20 18:59:59'::timestamp as date1_start,
+        '2026-01-21 19:00:00'::timestamp as date1_end,
+        '2026-01-27 18:59:59'::timestamp as date2_start,
+        '2026-01-28 19:00:00'::timestamp as date2_end
 ),
 merchants_list AS (
-    SELECT shop_name FROM (VALUES
+    SELECT shop_name FROM (values
+    	('ZT/VIBESTREAM PAYMENT SERVICES PROVIDER L.L.C Cards KZT'),
         ('ZT/Pagsmile Limited (smile.one) RUB'),
         ('ZT/Pagsmile Limited (smile.one) T-Pay (desktop-QR) RUB'),
         ('ZT/Pagsmile Limited (smile.one) T-Pay RUB'),
@@ -25,6 +26,7 @@ merchants_list AS (
         ('ZT/Pagsmile Limited (37games) Cards RUB'),
         ('ZT/Pagsmile Limited (37games) T-Pay (desktop QR) RUB'),
         ('ZT/Pagsmile Limited (37games) T-Pay RUB')
+        --- ('ZT/DukPay Limited Moonton RUB')
     ) AS t(shop_name)
 ),
 -- БЫСТРЫЙ способ получить shop_id - только из нужных дат
