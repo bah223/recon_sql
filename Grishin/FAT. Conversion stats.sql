@@ -25,7 +25,7 @@ group by
 --processing_error_message ,
 shop_name,
 "date",
---terminal
+--terminal --- fsdfsdfsdf
 driver_name ,
 --bin_country ,
 --issuer_name,
