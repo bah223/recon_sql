@@ -3,17 +3,10 @@
 
 WITH params AS (
     SELECT 
-<<<<<<< HEAD:report/fat_pag_vibestream.sql
-        '2026-01-20 18:59:59'::timestamp as date1_start,
-        '2026-01-21 19:00:00'::timestamp as date1_end,
-        '2026-01-27 18:59:59'::timestamp as date2_start,
-        '2026-01-28 19:00:00'::timestamp as date2_end
-=======
-        '2026-01-24 18:59:59'::timestamp as date1_start,
-        '2026-01-25 19:00:00'::timestamp as date1_end,
-        '2026-01-31 18:59:59'::timestamp as date2_start,
-        '2026-02-01 19:00:00'::timestamp as date2_end
->>>>>>> 9548a11 (Добавлены все новые магазины на 02.02.2026):report/fat_pag.sql
+        '2026-01-28 19:00:00'::timestamp as date1_start,
+        '2026-01-29 19:00:00'::timestamp as date1_end,
+        '2026-02-04 19:00:00'::timestamp as date2_start,
+        '2026-02-05 19:00:00'::timestamp as date2_end
 ),
 merchants_list AS (
     SELECT shop_name FROM (values

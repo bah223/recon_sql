@@ -3,17 +3,10 @@
 
 WITH params AS (
     SELECT 
-<<<<<<< HEAD
-        '2026-01-20 21:00:00'::timestamp as date1_start,
-        '2026-01-21 21:00:00'::timestamp as date1_end,
-        '2026-01-27 21:00:00'::timestamp as date2_start,
-        '2026-01-28 21:00:00'::timestamp as date2_end
-=======
-        '2026-01-24 21:00:00'::timestamp as date1_start,
-        '2026-01-25 21:00:00'::timestamp as date1_end,
-        '2026-01-31 21:00:00'::timestamp as date2_start,
-        '2026-02-01 21:00:00'::timestamp as date2_end
->>>>>>> 9548a11 (Добавлены все новые магазины на 02.02.2026)
+        '2026-01-28 21:00:00'::timestamp as date1_start,
+        '2026-01-29 21:00:00'::timestamp as date1_end,
+        '2026-02-04 21:00:00'::timestamp as date2_start,
+        '2026-02-05 21:00:00'::timestamp as date2_end
 ),
 merchants_list AS (
     SELECT * FROM (values
@@ -73,9 +66,6 @@ merchants_list AS (
         ('ZT/AIMO COMPANY LIMITED TPay (BuffBuff) RUB'),
         ('ZT/AIMO COMPANY LIMITED TPay (desktop-QR) (MLBB) RUB'),
         ('ZT/AIMO COMPANY LIMITED TPay (MLBB) RUB'),
-<<<<<<< HEAD
-        ('ZT/AIMO COMPANY LIMITED TPay (desktop-QR) (BuffBuff) RUB')
-=======
         ('ZT/AIMO COMPANY LIMITED TPay (desktop-QR) (BuffBuff) RUB'),
         ('ZT-Carusell/ATS ATES TUGLA SAN VE TIC LTD STI LLP Cards RUB'),
         ('ZT-Carusell/ATS ATES TUGLA SAN VE TIC LTD STI LLP T-Pay RUB'),
@@ -87,9 +77,11 @@ merchants_list AS (
         ('D2-GFI/Rapyd Holdings Pte Ltd. GCash PHP'),
         ('GFI/Rapyd Holdings Pte Ltd. BPI PHP'),
         ('GFI/Rapyd Holdings Pte Ltd. Maya PHP'),
-        ('GFI/Rapyd Holdings Pte Ltd. QRPh PHP')
+        ('GFI/Rapyd Holdings Pte Ltd. QRPh PHP'),
+        ('ZT/Zaya Solutions Limited Cards RUB'),
+        ('ZT/Zaya Solutions Limited Cards KZT')
+        
         --('ZT/THANOS PAYMENTS SOLUTIONS L.L.C-FZ KZT')
->>>>>>> 9548a11 (Добавлены все новые магазины на 02.02.2026)
     ) AS t(shop_name)
 ),
 -- Сначала получаем данные за периоды (они уже фильтруют по датам)

@@ -1,5 +1,5 @@
--- Запрос по платежам в RUB в процессинге GWP за период времени c 00:00 - 00:00, сравниваем количество транзакций дата1 и дата2 - рост и падение отображаем в процентах в выдаче.
--- В этом запросе меняем только даты.
+-- Запрос по платежам в RUB в процессинге GWP за период времени c 00:00 - 12:00, сравниваем количество транзакций дата1 и дата2 - рост и падение отображаем в процентах в выдаче.
+-- В этом запросе меняем только даты
 -- ок
 
 WITH selected_partners AS (
@@ -8,10 +8,10 @@ WITH selected_partners AS (
     WHERE id IN (
         4227, 3725, 3651, 4042, 3245, 3240, 3243, 3244, 3239, 3247, -- Здесь редактируем мерчантов для отчета можно добавить\убрать id
         3246, 3035, 3248, 3232, 3028, 3234, 3235, 3236, 3233, 3021,
-        3038, 4039, 3953, 3954, 3956, 4000, 4192, 4211, 4202,
+        3038, 4039, 3953, 3954, 3956, 4000, 4192, 4211, 4202, 4276, -- 3038 Термокит - нет в нашей таблице ид
         4203, 4257, 4043, 4327, 4326, 3921, 4002, 3834, 3876, 4326,
         4246, 4252, 4069, 4085, 4065, 4116, 4119, 4066, 4068, 4067,
-        4117, 4247, 4258, 4261, 4273, 4271, 4255, 4268, 4327, 3243
+        4117, 4247, 4258, 4261, 4273, 4271, 4255, 4268, 4327, 3243, 4277, 4278, 4327, 4326
     )
 ),
 partner_groups AS (
@@ -29,15 +29,15 @@ partner_groups AS (
 ),
 params AS (
     SELECT 
-        '2026-01-25'::date as date1,  -- Дата1 (полные сутки)
-        '2026-02-01'::date as date2   -- Дата2 (полные сутки)
+        '2026-01-29'::date as date1,  -- Дата1 (00:00-12:00)
+        '2026-02-05'::date as date2   -- Дата2 (00:00-12:00)
 ),
--- Полные сутки: 00:00-23:59
+-- Половина суток: 00:00-12:00
 created_date1 AS (
     SELECT po.partner_id, COUNT(*) AS cnt
     FROM public.db_wp_pay_operations po
     WHERE po.created >= (SELECT date1 FROM params)
-      AND po.created <  (SELECT date1 FROM params) + INTERVAL '1 day'
+      AND po.created <  (SELECT date1 FROM params) + INTERVAL '12 hours'
       AND po.partner_id IN (SELECT id FROM selected_partners)
     GROUP BY po.partner_id
 ),
@@ -45,7 +45,7 @@ created_date2 AS (
     SELECT po.partner_id, COUNT(*) AS cnt
     FROM public.db_wp_pay_operations po
     WHERE po.created >= (SELECT date2 FROM params)
-      AND po.created <  (SELECT date2 FROM params) + INTERVAL '1 day'
+      AND po.created <  (SELECT date2 FROM params) + INTERVAL '12 hours'
       AND po.partner_id IN (SELECT id FROM selected_partners)
     GROUP BY po.partner_id
 ),
@@ -73,8 +73,8 @@ aggregated_data AS (
 SELECT
     all_shop_ids AS "ID магазинов",
     group_name AS "Мерчант / Группа",
-    total_date1 AS "Транзакций (Дата1 - полные сутки)",
-    total_date2 AS "Транзакций (Дата2 - полные сутки)",
+    total_date1 AS "Транзакций (дата1 00:00-12:00)",
+    total_date2 AS "Транзакций (дата2 00:00-12:00)",
     diff AS "Δ (абс.)",
     CASE
         WHEN total_date1 = 0 AND total_date2 = 0 THEN '⚪️ 0 → 0'

@@ -3,31 +3,18 @@
 
 WITH params AS (
     SELECT 
-<<<<<<< HEAD
-        '2026-01-21 00:00:00'::timestamp as period1_start,
-        '2026-01-21 23:59:00'::timestamp as period1_end,
-        '2026-01-28 00:00:00'::timestamp as period2_start,
-        '2026-01-28 23:59:00'::timestamp as period2_end
-),
-selected_ids AS (
-    SELECT id FROM (VALUES
-        (1510),
-        (4190),
-        (4084),
-        (4291)
-    ) AS t(id)
-=======
-        '2026-01-24 21:00:00'::timestamp as date1_start,
-        '2026-01-25 20:59:00'::timestamp as date1_end,
-        '2026-01-31 21:00:00'::timestamp as date2_start,
-        '2026-02-01 20:59:00'::timestamp as date2_end
+        '2026-01-29 21:00:00'::timestamp as date1_start,
+        '2026-01-30 20:59:00'::timestamp as date1_end,
+        '2026-02-04 21:00:00'::timestamp as date2_start,
+        '2026-02-05 20:59:00'::timestamp as date2_end
 ),
 merchants_list AS (
     SELECT * FROM (VALUES
         ('ZT/PLAYMAG-FZCO Cards KZT'),
-        --('ZT/THANOS PAYMENTS SOLUTIONS L.L.C-FZ KZT') -- Ваще не ищет танос
+        ('ZT/THANOS PAYMENTS SOLUTIONS L.L.C-FZ KZT'), -- Ваще не ищет танос
         --('ZT/VIBESTREAM PAYMENT SERVICES PROVIDER L.L.C Cards KZT'),
         --('ZT/Pagsmile Limited Cards KZT')
+        ('ZT/Zaya Solutions Limited Cards KZT')
     ) AS t(shop_name)
 ),
 period1_data AS (
@@ -66,7 +53,6 @@ found_shop_ids AS (
     SELECT DISTINCT shop_id, shop_name 
     FROM period2_data 
     WHERE shop_id IS NOT NULL
->>>>>>> 9548a11 (Добавлены все новые магазины на 02.02.2026)
 )
 SELECT
     COALESCE(fsi.shop_id, 0) AS "ID",
